@@ -5,4 +5,110 @@ type: recipe
 i18nReady: true
 ---
 
+import FileTree from '~/components/FileTree.astro'
+
 **Astro Integrations** add new functionality and behaviors for your project with only a few lines of code.
+
+This recipe is for anyone for writing and building their own integration. To learn how to use an integration in your project, check out our [Using Integrations](/en/guides/integrations-guide/) guide instead.
+
+## Prerequisites:
+
+- An empty Astro project.
+
+## Recipe:
+
+1. Create a directory for creating an integration under the `src` directory.
+
+<FileTree>
+- src/
+  - **integration/**
+    - awesomeIntegration.ts
+</FileTree>
+
+2. Import `AstroIntegration` interface
+
+Astro can be easily built using the [`AstroIntegration`](/en/reference/integrations-reference/) interface.
+
+```ts title="src/integration/awesomeIntegration.ts"
+import type { AstroIntegration } from "astro";
+```
+3. Build a simple integration using hooks
+
+Astro uses hooks to run integration. Hooks run a callback function when an event is fired.
+
+```ts title="src/integration/awesomeIntegration.ts"
+export default function awesomeIntegration(): AstroIntegration {
+  return {
+    name: "awesomeIntegration",
+    hooks: {
+      "astro:config:setup": ({ command }) => {
+        console.log(`astro:config:setup> running command: ${command}`);
+      },
+    },
+  };
+}
+```
+
+To make the integration work, import it on the `astro.config.mjs` file.
+
+```ts title="astro.config.mjs"
+import { defineConfig } from "astro/config";
+import awesomeIntegration from "./src/integrations/awesomeIntegration";
+
+export default defineConfig({
+  integrations: [awesomeIntegration()],
+});
+```
+
+Now, in order to see this integration in action start the dev server. This should produce the following output:
+
+```
+astro:config:setup> running command: dev
+```
+
+4. Add custom configuration to the integration
+
+Adding custon integration to the integration is as easy as passing arguments to a function.
+
+First, create a type for the configuration.
+
+```ts title="src/integration/awesomeIntegration.ts"
+type AwesomeType = {
+  name: string;
+};
+```
+
+In order to it work, add an `options` parameter to the exported function.
+
+```ts title="src/integration/awesomeIntegration.ts"
+export default function awesomeIntegration(options: AwesomeType): AstroIntegration {
+  return {
+    name: "awesomeIntegration",
+    hooks: {
+      "astro:config:setup": ({ command }) => {
+        console.log(`astro:config:setup> running command: ${command}`);
+        console.log(`Greetings, ${options.name}!`);
+      },
+    },
+  };
+}
+```
+
+Now, this configuration can be passed to the integration in the `astro.config.mjs` file.
+
+```ts title="astro.config.mjs"
+import { defineConfig } from "astro/config";
+import awesomeIntegration from "./src/integrations/awesomeIntegration";
+
+export default defineConfig({
+  integrations: [awesomeIntegration({
+    name: "Neel"
+  })],
+});
+```
+Restarting the server would print the following to the console:
+
+```
+astro:config:setup> running command: dev
+Greetings, Neel!
+```
